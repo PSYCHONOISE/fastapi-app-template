@@ -40,6 +40,6 @@ sudo chown -R admin:admin /var/log/supervisor/
 # supervisord # logs
 # cat /var/log/supervisor/supervisord.log # logs
 
-# sudo apt -y install nginx
-# sudo apt -y install mc
-sudo apt -y install yarn synaptic finger htop curl wget lynx unzip
+# Others prerequisites
+#
+sudo apt -y install nginx mc htop yarn synaptic finger curl wget lynx unzip
