@@ -87,7 +87,9 @@ else                                echo "Unknown response code: $HTTP_CODE"; ex
 
 # Configuring Nginx
 #
-sudo bash -c "cat <<\EOF > /etc/nginx/sites-available/fastapi-app
+# sudo usermod -aG $USER www-data # groups www-data
+sudo setfacl -m u:www-data:rx $(echo "$APP_PATH/run" | awk -F/ 'BEGIN{OFS="/"} {for (i=2; i<=NF; i++) {path=path"/"$i; print path}}') # Make sure you are using the www-data user that Nginx runs on behalf of.
+sudo bash -c "cat <<\EOF > /etc/nginx/sites-available/$APP_NAME
 upstream app_server {
   server unix:$APP_PATH/run/gunicorn.sock fail_timeout=0;
 }
@@ -106,17 +108,16 @@ server {
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header Host \$http_host;
     proxy_redirect off;
-                    
-    if (!-f \$request_filename) {
+
+EOF" && sudo bash -c "echo '    if (!-f \$request_filename) {' >> /etc/nginx/sites-available/$APP_NAME" && sudo bash -c "cat <<\EOF >> /etc/nginx/sites-available/$APP_NAME
       proxy_pass http://app_server;
       break;
     }
   }
 }
 EOF"
-sudo ln -s /etc/nginx/sites-available/fastapi-app /etc/nginx/sites-enabled/fastapi-app
+sudo ln -s "/etc/nginx/sites-available/$APP_NAME" "/etc/nginx/sites-enabled/$APP_NAME"
 sudo nginx -t && sudo nginx -s reload && sudo systemctl status nginx
-
 # Optionally, set up password authentication with Nginx
 # sudo sh -c "echo -n 'grasper:' >> /etc/nginx/.htpasswd" #  Create a hidden file to store our username and password combinations.
 # sudo sh -c "openssl passwd -apr1 >> /etc/nginx/.htpasswd" # Add an encrypted password entry for the username (by hands)
