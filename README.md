@@ -1,4 +1,4 @@
-# FastAPI+Gunicorn+NGINX application template
+# FastAPI Application Template
 
 If you make changes to the code, you can restart the service to apply to changes by running this command:
 `sudo supervisorctl restart fastapi-app`
