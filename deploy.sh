@@ -2,38 +2,118 @@
 
 set -e
 
+APP_NAME="fastapi-app"
+APP_PATH="/srv/$APP_NAME"
+
 # Prepare system
 #
 ./deploy.pt1.sh
 
 # Deploy application
 #
-cd ~ && git clone git@github.com:PSYCHONOISE/fastapi-app-template.git && cd fastapi-app-template
+sudo mkdir -p $APP_PATH && sudo chown -R $USER:$USER "$APP_PATH"
+cd $APP_PATH && git clone https://github.com/PSYCHONOISE/fastapi-app-template.git .
+rm -rf .git && git init
+if [ -d "env" ]; then rm -rf ./env; fi
+chmod 750 .                          # drwxr-x---
+find . -type f -exec chmod 640 {} \; # frw-r-----
+find . -type d -exec chmod 750 {} \; # drwxr-x---
+chmod u+x ./deploy.sh
+chmod u+x ./save.sh
 python3 -m venv env && . env/bin/activate
-pip install -r requirements-dev.lock.txt
+pip install -r requirements-dev.lock.txt && deactivate
+# sudo ufw allow 8080
 # uvicorn main:app --host 0.0.0.0 --port 8080 # Verify that everything went well by running the application, e.g. use `curl localhost:8080`
 chmod u+x gunicorn_start
+chmod u+x ./bang.sh
 
 # Configuring Supervisor
 #
-sudo cp ./stencil/etc/supervisor/conf.d/fastapi-app.conf /etc/supervisor/conf.d/fastapi-app.conf # sudo ln -s supervisor-fastapi-app.conf /etc/supervisor/conf.d/ # don't work
+echo '#!/bin/bash' > ./bang.sh
+sudo bash -c "cat <<\EOF >> ./bang.sh
+#\!/bin/bash
+
+set -e
+
+# . env/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8080
+
+NAME=$APP_NAME
+DIR=$APP_PATH
+USER=$USER
+GROUP=$USER
+WORKERS=3
+WORKER_CLASS=uvicorn.workers.UvicornWorker
+VENV=\"\$DIR/env/bin/activate\"
+BIND=unix:\"\$DIR/run/gunicorn.sock\"
+LOG_LEVEL=error
+
+cd \"\$DIR\"
+source \"\$VENV\"
+
+exec gunicorn main:app \\
+  --name \"\$NAME\" \\
+  --workers \"\$WORKERS\" \\
+  --worker-class \"\$WORKER_CLASS\" \\
+  --user=\"\$USER\" \\
+  --group=\"\$GROUP\" \\
+  --bind=\"\$BIND\" \\
+  --log-level=\"\$LOG_LEVEL\" \\
+  --log-file=-
+EOF"
+chmod u+x ./bang.sh
+sudo bash -c "cat <<\EOF > /etc/supervisor/conf.d/fastapi-app.conf
+[program:$APP_NAME]
+command=$APP_PATH/bang.sh
+user=$USER
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=$APP_PATH/log/gunicorn-error.log
+EOF"
 sudo supervisorctl reread
 sudo supervisorctl update
 # sudo supervisorctl reload
+sudo supervisorctl status fastapi-app
+HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --unix-socket "$APP_PATH/run/gunicorn.sock" localhost) # Отправляем запрос с помощью curl и сохраняем код ответа
+if [ "$HTTP_CODE" -eq 200 ]; # Проверяем код ответа
+then echo "Successful request. Response code: $HTTP_CODE"
+elif [ "$HTTP_CODE" -eq 404 ]; then echo "Error 404: Page not found.";        exit 0
+elif [ "$HTTP_CODE" -eq 500 ]; then echo "Error 500: Internal server error."; exit 0
+else                                echo "Unknown response code: $HTTP_CODE"; exit 0; fi
 #
-# checking:
-# sudo supervisorctl status fastapi-app
-# or
-# curl --unix-socket /home/fastapi-user/fastapi-nginx-gunicorn-application/run/gunicorn.sock localhost
 # TechDebt: https://stackoverflow.com/questions/19737511/gunicorn-throws-oserror-errno-1-when-starting
 #
-# if you make changes to the code, you can restart the service to apply to changes by running this command:
-# sudo supervisorctl restart fastapi-app
+# PS. if you make changes to the code, you can restart the service to apply to changes by running this command: `sudo supervisorctl restart fastapi-app`
 
 # Configuring Nginx
 #
-cp ./stencil/etc/nginx/sites-available/fastapi-app /etc/nginx/sites-available/fastapi-app
-# nano fastapi-app # не забудте изменить значение server_name в файле
+sudo bash -c "cat <<\EOF > /etc/nginx/sites-available/fastapi-app
+upstream app_server {
+  server unix:$APP_PATH/run/gunicorn.sock fail_timeout=0;
+}
+
+server {
+  listen 8080;
+  server_name _; # Add here the ip address of your server or a domain pointing to that ip (like example.com or www.example.com).
+
+  keepalive_timeout 5;
+  client_max_body_size 4G;
+
+  access_log $APP_PATH/log/nginx-access.log;
+  error_log  $APP_PATH/log/nginx-error.log;
+
+  location / {
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header Host \$http_host;
+    proxy_redirect off;
+                    
+    if (!-f \$request_filename) {
+      proxy_pass http://app_server;
+      break;
+    }
+  }
+}
+EOF"
 sudo ln -s /etc/nginx/sites-available/fastapi-app /etc/nginx/sites-enabled/fastapi-app
 sudo nginx -t && sudo nginx -s reload && sudo systemctl status nginx
 
