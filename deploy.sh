@@ -88,7 +88,7 @@ else                                echo "Unknown response code: $HTTP_CODE"; ex
 # Configuring Nginx
 #
 # sudo usermod -aG $USER www-data # groups www-data
-sudo setfacl -m u:www-data:rx $(echo "$APP_PATH/run" | awk -F/ 'BEGIN{OFS="/"} {for (i=2; i<=NF; i++) {path=path"/"$i; print path}}') # Make sure you are using the www-data user that Nginx runs on behalf of.
+sudo setfacl -m u:www-data:rx $(echo "$APP_PATH/run" | awk -F/ 'BEGIN{OFS="/"} {for (i=2; i<=NF; i++) {path=path"/"$i; print path}}') # Make sure you are using the www-data user that Nginx runs on behalf of by `ps aux | grep nginx` 
 # sudo getfacl $(echo "$APP_PATH/run" | awk -F/ 'BEGIN{OFS="/"} {for (i=2; i<=NF; i++) {path=path"/"$i; print path}}') # Check.
 sudo bash -c "cat <<\EOF > /etc/nginx/sites-available/$APP_NAME
 upstream app_server {
