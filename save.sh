@@ -11,7 +11,7 @@ git config --global user.name $GIT_USER_NAME
 git config --global user.email $GIT_USER_EMAIL
 
 OUTPUT=$(ssh -T git@github.com) # Проверка соединения с GitHub по SSH
-echo OUTPUT
+echo $OUTPUT
 if echo "$OUTPUT" | grep -q "successfully authenticated"; then # Если SSH подключение успешно, то устанавливаем SSH ссылку, иначе переключаемся на HTTPS.
   echo "SSH authentication successful. Setting remote URL to SSH."
   git remote set-url origin "git@github.com:$GIT_USER_NAME/$GIT_REPOSITORY.git"
