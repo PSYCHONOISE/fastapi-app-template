@@ -9,8 +9,8 @@ GIT_REPOSITORY="fastapi-app-template"
 git config --global user.name $GIT_USER_NAME
 git config --global user.email $GIT_USER_EMAIL
 
-ssh -T git@github.com &> /dev/null # Проверка соединения с GitHub по SSH
-if [ $? -eq 1 ]; then # Если SSH подключение успешно, то устанавливаем SSH ссылку, иначе переключаемся на HTTPS.
+ssh -T git@github.com &> /dev/null # Testing GitHub Connection via SSH.
+if [ $? -eq 1 ]; then # If the SSH connection is successful, then we set the SSH link, otherwise we switch to HTTPS.
   echo "SSH authentication successful. Setting remote URL to SSH."
   git remote set-url origin "git@github.com:$GIT_USER_NAME/$GIT_REPOSITORY.git"
 else
