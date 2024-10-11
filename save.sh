@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # https://www.shellcheck.net/
-# https://itisgood.ru/2024/03/13/chto-takoe-ifs-v-skriptakh-na-bash/
 
 GIT_USER_NAME="PSYCHONOISE"
 GIT_USER_EMAIL="id206641178@gmail.com"
@@ -21,7 +20,7 @@ fi
 
 set -e
 
-IFS='.' read -r -a array <<< "$(cat version)"
+IFS='.' read -r -a array <<< "$(cat version)" # https://itisgood.ru/2024/03/13/chto-takoe-ifs-v-skriptakh-na-bash/
 
 if git diff-index --quiet HEAD --; then
   echo "There are NO changes to the working directory."
