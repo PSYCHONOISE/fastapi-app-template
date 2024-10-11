@@ -8,7 +8,7 @@ set -e
 
 # Deploy application
 #
-cd ~ && git clone https://github.com/PSYCHONOISE/fastapi-nginx-gunicorn-application.git && cd fastapi-nginx-gunicorn-application
+cd ~ && git clone git@github.com:PSYCHONOISE/fastapi-app-template.git && cd fastapi-app-template
 python3 -m venv env && . env/bin/activate
 pip install -r requirements-dev.lock.txt
 # uvicorn main:app --host 0.0.0.0 --port 8080 # Verify that everything went well by running the application, e.g. use `curl localhost:8080`
