@@ -3,12 +3,23 @@
 # https://www.shellcheck.net/
 # https://itisgood.ru/2024/03/13/chto-takoe-ifs-v-skriptakh-na-bash/
 
+GIT_USER_NAME="PSYCHONOISE"
+GIT_USER_EMAIL="id206641178@gmail.com"
+GIT_REPOSITORY="fastapi-app-template"
+
+git config --global user.name $GIT_USER_NAME
+git config --global user.email $GIT_USER_EMAIL
+
+OUTPUT=$(ssh -T git@github.com 2>&1) # Проверка соединения с GitHub по SSH
+if [ "$OUTPUT" == *"You've successfully authenticated"* ]; then # Если SSH подключение успешно, то устанавливаем SSH ссылку, иначе переключаемся на HTTPS.
+  echo "SSH authentication successful. Setting remote URL to SSH."
+  git remote set-url origin "git@github.com:$GIT_USER_NAME/$GIT_REPOSITORY.git"
+else
+  echo "SSH authentication failed. Setting remote URL to HTTPS."
+  git remote set-url origin "https://github.com/$GIT_USER_NAME/$GIT_REPOSITORY.git"
+fi
+
 set -e
-
-git config --global user.name "PSYCHONOISE"
-git config --global user.email "id206641178@gmail.com"
-
-git remote set-url origin git@github.com:PSYCHONOISE/fastapi-app-template.git
 
 IFS='.' read -r -a array <<< "$(cat version)"
 
