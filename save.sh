@@ -8,6 +8,8 @@ set -e
 git config --global user.name "PSYCHONOISE"
 git config --global user.email "id206641178@gmail.com"
 
+# git remote set-url origin git@github.com:PSYCHONOISE/fastapi-app-template.git
+
 IFS='.' read -r -a array <<< "$(cat version)"
 
 if git diff-index --quiet HEAD --; then
