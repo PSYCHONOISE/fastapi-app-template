@@ -1,7 +1,10 @@
 import time
 from fastapi import FastAPI, Request
 
-app = FastAPI()
+app = FastAPI(
+  title="My Awesome API",
+  description="This is a very fancy project, with auto docs for the API",
+  version="1.0.0")
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
