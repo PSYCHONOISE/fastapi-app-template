@@ -41,7 +41,6 @@ else
   echo "The current version has been changed to $VERSION."
   # exit 0
   echo $VERSION > ./version
-  git add .
   git status
   git commit -m "${VERSION}"
 fi

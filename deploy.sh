@@ -34,7 +34,7 @@ sudo bash -c "cat <<\EOF >> ./bang.sh
 
 set -e
 
-# . env/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8080
+# . .env && . env/bin/activate && uvicorn main:app --reload --host $APPLICATION_HOST --port $APPLICATION_PORT
 
 NAME=$APP_NAME
 DIR=$APP_PATH
