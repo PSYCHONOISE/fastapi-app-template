@@ -25,8 +25,6 @@ pip install --upgrade pip
 pip install -r requirements-dev.lock.txt && deactivate
 # sudo ufw allow 8080
 # uvicorn main:app --host 0.0.0.0 --port 8080 # Verify that everything went well by running the application, e.g. use `curl localhost:8080`
-chmod u+x gunicorn_start
-chmod u+x ./bang.sh
 
 # Configuring Supervisor
 #
